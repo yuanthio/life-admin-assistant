@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Reminder" ALTER COLUMN "dueDate" SET DATA TYPE TIMESTAMPTZ;

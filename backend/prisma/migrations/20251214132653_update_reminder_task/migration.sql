@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Reminder" ALTER COLUMN "dueDate" SET DATA TYPE TIMESTAMP(3);
+
+-- AlterTable
+ALTER TABLE "Task" ALTER COLUMN "dueDate" SET DATA TYPE TIMESTAMP(3);

@@ -1,0 +1,112 @@
+// life-admin-assistant/backend/prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  name      String?
+  profile   Profile?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  templates Template[]
+  tasks     Task[]
+  reminders Reminder[]
+  checklistItems ChecklistItem[] // TAMBAH INI - relasi ke ChecklistItem
+}
+
+model Profile {
+  id              Int     @id @default(autoincrement())
+  userId          Int     @unique
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleType     String?
+  hasPassport     Boolean @default(false)
+  hasDrivingLicense Boolean @default(false)
+  hasIdCard       Boolean @default(false)
+  householdSize   Int?
+  houseOwnership  String?
+  billReminders   Boolean @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Template {
+  id          Int      @id @default(autoincrement())
+  name        String   // Nama template = nama kategori
+  description String?
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Task {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  templateId  Int?      // Template = Kategori
+  template    Template? @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dueDate     DateTime?
+  completed   Boolean   @default(false)
+  frequency   String?
+  priority    String    @default("medium")
+  lastRemindedAt DateTime?
+  reminders   Reminder[]
+  checklistItems ChecklistItem[] // TAMBAH INI - relasi ke ChecklistItem
+  serviceType   String? // TAMBAH INI: tipe layanan (SIM, PLN, dll)
+  serviceUrl    String? // TAMBAH INI: link ke layanan resmi
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([templateId])
+}
+
+model Reminder {
+  id        Int      @id @default(autoincrement())
+  taskId    Int?
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // '30_days', '7_days', '1_day', 'due_today', 'overdue'
+  message   String
+  sent      Boolean  @default(false)
+  sentAt    DateTime?
+  dueDate   DateTime 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([taskId])
+  @@index([userId])
+  @@index([dueDate])
+}
+
+// TAMBAHKAN MODEL BARU INI
+model ChecklistItem {
+  id          Int      @id @default(autoincrement())
+  taskId      Int
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  description String
+  completed   Boolean  @default(false)
+  order       Int      @default(0)
+  link        String?  // Link ke layanan resmi untuk langkah ini
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([taskId])
+  @@index([userId])
+}
